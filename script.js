@@ -39,11 +39,11 @@ function main() {
       switch (state.currentShape) {
         case "Line":
           // console.log(vertexArray)
-          gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
-          gl.bufferData( gl.ARRAY_BUFFER, new Float32Array([...vertexArray, mousePos[0], mousePos[1]]), gl.STATIC_DRAW );
+          gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
+          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([...vertexArray, mousePos[0], mousePos[1]]), gl.STATIC_DRAW);
           gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
 
-          gl.drawArrays(state.currentShape === "Line" ? gl.LINES : gl.LINE_LOOP, 0, vertexArray.length / 2 + 1);
+          gl.drawArrays(gl.LINES, 0, vertexArray.length / 2 + 1);
           break;
         case "Square":
           let x1 = vertexArray[0];
@@ -52,11 +52,11 @@ function main() {
           let y2 = mousePos[1];
           let eu = ((x2-x1)**2 + (y2-y1)**2)**0.5
           // console.log(eu)
-          gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
-          gl.bufferData( gl.ARRAY_BUFFER, new Float32Array([...vertexArray, x1, y1-eu,x1-eu, y1-eu,x1-eu, y1]), gl.STATIC_DRAW );
+          gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
+          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([...vertexArray, x1, y1-eu,x1-eu, y1-eu,x1-eu, y1]), gl.STATIC_DRAW);
           gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
 
-          gl.drawArrays(state.currentShape === "Square" ? gl.TRIANGLE_FAN : gl.LINE_LOOP, 0, 4);
+          gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
           break;
         case "Rectangle":
           gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
@@ -68,6 +68,12 @@ function main() {
           gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
 
           gl.drawArrays(state.currentShape === "Rectangle" ? gl.TRIANGLE_FAN : gl.LINE_LOOP, 0, 4);
+        case "Polygon":
+          gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
+          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([...vertexArray, mousePos[0], mousePos[1]]), gl.STATIC_DRAW);
+          gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
+
+          gl.drawArrays(gl.LINE_LOOP, 0, vertexArray.length / 2 + 1);
           break;
           
       }
@@ -141,6 +147,8 @@ function initEventListeners(gl, canvas) {
   document.getElementsByName("shape").forEach((rad) => {
     rad.addEventListener("change", (e) => {
       state.currentShape = e.target.value;
+      state.mode = "Selecting";
+      vertexArray.length = 0;
     })
   });
 
