@@ -58,6 +58,18 @@ function main() {
 
           gl.drawArrays(state.currentShape === "Square" ? gl.TRIANGLE_FAN : gl.LINE_LOOP, 0, 4);
           break;
+        case "Rectangle":
+          gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
+          gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array([...vertexArray, vertexArray[0], mousePos[1], mousePos[0], mousePos[1], mousePos[0], vertexArray[0]]),
+            gl.STATIC_DRAW
+          );
+          gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
+
+          gl.drawArrays(state.currentShape === "Rectangle" ? gl.TRIANGLE_FAN : gl.LINE_LOOP, 0, 4);
+          break;
+          
       }
     }
 
@@ -189,6 +201,13 @@ function handleClick(gl, e, canvas) {
         vertexArray.length = 0;
         break;
       case "Rectangle":
+        vertexArray.push(position[0]);
+        vertexArray.push(position[1]);
+        state.shapes.push(new Rectangle(vertexArray, state.color));
+
+        state.mode = "Selecting";
+
+        vertexArray.length = 0;
         break;
       case "Polygon":
         vertexArray.push(position[0]);

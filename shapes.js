@@ -53,7 +53,27 @@ class Square extends Shape {
 }
 
 class Rectangle extends Shape {
+  draw(gl, program) {
+    let positionLoc = gl.getAttribLocation(program, "a_position");
+    let colorLoc = gl.getUniformLocation(program, "u_color");
 
+    let x1 = this.vertexArray[0];
+    let y1 = this.vertexArray[1];
+    let x2 = this.vertexArray[2];
+    let y2 = this.vertexArray[3];
+
+    let vBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      new Float32Array([x1, y1, x1, y2, x2, y2, x2, y1]),
+      gl.STATIC_DRAW
+    );
+    gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
+    gl.uniform4fv(colorLoc, this.color);
+
+    gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+  }
 }
 
 class Polygon extends Shape {
