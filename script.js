@@ -1,10 +1,16 @@
 let vertexArray = [];
-let mousePos = []
+let mousePos = [];
+let nextId = 1;
 let state = {
   currentShape: "Line",
   mode: "Selecting",
   shapes: [],
-  color: [1.0, 0.0, 0.0, 1.0]
+  color: [0.0, 0.0, 0.0, 1.0],
+  hoverId: 0,
+  selectedId: 0,
+  selectedShape: null,
+  pointToMove: -1,
+  isMoving: false,
 }
 
 function main() {
@@ -17,6 +23,7 @@ function main() {
   gl.clearColor(1.0, 1.0, 1.0, 1.0);
  
   let program = initShaders(gl, "vertex-shader", "fragment-shader");
+  let selectProgram = initShaders(gl, "pick-vertex-shader", "pick-fragment-shader");
   gl.useProgram(program);
 
   initEventListeners(gl, canvas);
@@ -24,21 +31,96 @@ function main() {
   let positionLoc = gl.getAttribLocation(program, "a_position");
   let colorLoc = gl.getUniformLocation(program, "u_color");
   let resolutionLoc = gl.getUniformLocation(program, "u_resolution");
+  let resolutionSelectLoc = gl.getUniformLocation(selectProgram, "u_resolution");
  
   gl.enableVertexAttribArray(positionLoc);
 
-  function render() {
-    // console.log(vertexArray);
-    gl.clear(gl.COLOR_BUFFER_BIT);
+  // Create a texture to render to
+  const targetTexture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, targetTexture);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  
+  // create a depth renderbuffer
+  const depthBuffer = gl.createRenderbuffer();
+  gl.bindRenderbuffer(gl.RENDERBUFFER, depthBuffer);
+  
+  function setFramebufferAttachmentSizes(width, height) {
+    gl.bindTexture(gl.TEXTURE_2D, targetTexture);
+    // define size and format of level 0
+    const level = 0;
+    const internalFormat = gl.RGBA;
+    const border = 0;
+    const format = gl.RGBA;
+    const type = gl.UNSIGNED_BYTE;
+    const data = null;
+    gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
+                  width, height, border,
+                  format, type, data);
+  
+    gl.bindRenderbuffer(gl.RENDERBUFFER, depthBuffer);
+    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, width, height);
+  }
+  
+  // Create and bind the framebuffer
+  const fb = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  // gl.bindFramebuffer(gl.FRAMEBUFFER, null);  
+  
+  // attach the texture as the first color attachment
+  const attachmentPoint = gl.COLOR_ATTACHMENT0;
+  const level = 0;
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, targetTexture, level);
+  
+  // make a depth buffer and the same size as the targetTexture
+  gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depthBuffer);
 
-    gl.uniform4fv(colorLoc, [0.0, 0.0, 0.0, 1.0]);
+  function render() {
+    gl.useProgram(selectProgram);
+
+    setFramebufferAttachmentSizes(gl.canvas.width, gl.canvas.height);
+
+    // ------ Draw the objects to the texture --------
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    
+    gl.enable(gl.DEPTH_TEST);
+    
+    // Clear the canvas AND the depth buffer.
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    gl.uniform2f(resolutionSelectLoc, canvas.clientWidth, canvas.clientHeight);
+    state.shapes.forEach(shape => shape.drawID(gl, selectProgram));
+
+    // ------ Figure out what pixel is under the mouse and read it
+
+    const data = new Uint8Array(4);
+    gl.readPixels(
+        mousePos[0],            // x
+        mousePos[1],            // y
+        1,                 // width
+        1,                 // height
+        gl.RGBA,           // format
+        gl.UNSIGNED_BYTE,  // type
+        data);             // typed array to hold result
+
+    state.hoverId = data[0] + (data[1] << 8) + (data[2] << 16) + (data[3] << 24);
+
+    gl.useProgram(program);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+    gl.uniform4fv(colorLoc, state.color);
     gl.uniform2f(resolutionLoc, canvas.clientWidth, canvas.clientHeight);
 
     if (state.mode === "Drawing") {
       let vBuffer = gl.createBuffer();
       switch (state.currentShape) {
         case "Line":
-          // console.log(vertexArray)
           gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
           gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([...vertexArray, mousePos[0], mousePos[1]]), gl.STATIC_DRAW);
           gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
@@ -46,14 +128,14 @@ function main() {
           gl.drawArrays(gl.LINES, 0, vertexArray.length / 2 + 1);
           break;
         case "Square":
-          let x1 = vertexArray[0];
-          let y1 = vertexArray[1];
-          let x2 = mousePos[0];
-          let y2 = mousePos[1];
-          let eu = ((x2-x1)**2 + (y2-y1)**2)**0.5
-          // console.log(eu)
+          let dx = mousePos[0] - vertexArray[0];
+          let sign = Math.sign(mousePos[1] - vertexArray[1]) * Math.sign(dx);
+
           gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
-          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([...vertexArray, x1, y1-eu,x1-eu, y1-eu,x1-eu, y1]), gl.STATIC_DRAW);
+          gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array([...vertexArray, mousePos[0], vertexArray[1], mousePos[0], vertexArray[1]+sign*dx, vertexArray[0], vertexArray[1]+sign*dx]),
+            gl.STATIC_DRAW);
           gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
 
           gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
@@ -62,12 +144,13 @@ function main() {
           gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
           gl.bufferData(
             gl.ARRAY_BUFFER,
-            new Float32Array([...vertexArray, vertexArray[0], mousePos[1], mousePos[0], mousePos[1], mousePos[0], vertexArray[0]]),
+            new Float32Array([...vertexArray, vertexArray[0], mousePos[1], mousePos[0], mousePos[1], mousePos[0], vertexArray[1]]),
             gl.STATIC_DRAW
           );
           gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
 
           gl.drawArrays(state.currentShape === "Rectangle" ? gl.TRIANGLE_FAN : gl.LINE_LOOP, 0, 4);
+          break;
         case "Polygon":
           gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
           gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([...vertexArray, mousePos[0], mousePos[1]]), gl.STATIC_DRAW);
@@ -79,12 +162,16 @@ function main() {
       }
     }
 
+    if (state.selectedShape) {
+      state.selectedShape.drawSelectPoints(gl, program);
+    }
+
     state.shapes.forEach(shape => shape.draw(gl, program));
   
     requestAnimationFrame(render)
   }
 
-  render();
+  requestAnimationFrame(render);
 }
 
 function initShaders(gl, vertexShaderId, fragmentShaderId) {
@@ -136,13 +223,41 @@ function initShaders(gl, vertexShaderId, fragmentShaderId) {
 }
 
 function initEventListeners(gl, canvas) {
+  document.getElementById("color-picker").addEventListener("input", (e) => {
+    let rgb = hexToRgb(e.target.value);
+    state.color = [...rgb, 1.0];
+    if (state.selectedShape) {
+      state.selectedShape.setColor(state.color);
+    }
+  });
+
   canvas.addEventListener("click", (e) => {
     handleClick(gl, e, canvas)
   });
 
   canvas.addEventListener("mousemove", (e) => {
     mousePos = getMousePosition(gl, e, canvas);
+    if (state.currentShape === "Select") {
+      if (state.selectedShape && state.isMoving) {
+        state.selectedShape.movePoint(state.pointToMove, mousePos[0], mousePos[1]);
+      }
+    }
   });
+
+  canvas.addEventListener("mousedown", (e) => {
+    if (state.currentShape === "Select") {
+      if (state.selectedShape) {
+        state.pointToMove = state.selectedShape.getSelectedPoint(mousePos[0], mousePos[1])
+        if (state.pointToMove > -1) {
+          state.isMoving = true;
+        }
+      }
+    }
+  })
+
+  canvas.addEventListener("mouseup", (e) => {
+    state.isMoving = false;
+  })
 
   document.getElementsByName("shape").forEach((rad) => {
     rad.addEventListener("change", (e) => {
@@ -153,6 +268,22 @@ function initEventListeners(gl, canvas) {
   });
 
   window.addEventListener("keydown", handleKey);
+}
+
+function hexToRgb(hex) {
+  let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? [
+    parseInt(result[1], 16) / 255,
+    parseInt(result[2], 16) / 255,
+    parseInt(result[3], 16) / 255
+  ] : null;
+}
+
+function rgbToHex(r, g, b) {
+  r *= 255;
+  g *= 255;
+  b *= 255;
+  return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
 }
 
 function getMousePosition(gl, e, canvas) {
@@ -167,26 +298,39 @@ function getMousePosition(gl, e, canvas) {
 
 function handleKey(e) {
   if (e.code === "Space" && state.mode === "Drawing" && state.currentShape === "Polygon") {
-   
-    state.shapes.push(new Polygon(vertexArray, state.color))
-
+    if (vertexArray.length > 4) {
+      state.shapes.push(new Polygon(vertexArray, state.color, nextId));
+      nextId++;
+    }
     state.mode = "Selecting";
     vertexArray.length = 0;
   }
 }
 
 function handleClick(gl, e, canvas) {
-  const position = getMousePosition(gl, e, canvas)
-  // console.log(state.shapes);
+  const position = getMousePosition(gl, e, canvas);
 
   if (state.mode === "Selecting") {
     if (state.currentShape != "Select") {
+  
       vertexArray.push(position[0]);
       vertexArray.push(position[1]);
 
       state.mode = "Drawing";
     } else {
 
+      if (state.selectedShape) {
+        state.selectedShape.toggleSelect();
+      }
+
+      state.selectedId = state.hoverId;
+
+      state.selectedShape = state.shapes.find(s => s.id == state.selectedId);
+      
+      if (state.selectedShape) {
+        state.selectedShape.toggleSelect();
+        document.getElementById("color-picker").value = rgbToHex(state.color[0], state.color[1], state.color[2]);
+      }
     }
   } else if (state.mode === "Drawing") {
     switch (state.currentShape) {
@@ -194,25 +338,31 @@ function handleClick(gl, e, canvas) {
         vertexArray.push(position[0]);
         vertexArray.push(position[1]);
 
-        state.shapes.push(new Line(vertexArray, state.color))
+        state.shapes.push(new Line(vertexArray, state.color, nextId));
+        nextId++;
         state.mode = "Selecting";
 
         vertexArray.length = 0;
         break;
       case "Square":
-        vertexArray.push(position[0]);
-        vertexArray.push(position[1]);
-        state.shapes.push(new Square(vertexArray, state.color))
+        // vertexArray.push(position[0]);
+        // vertexArray.push(position[1]);
+        let dx = mousePos[0] - vertexArray[0];
+        let sign = Math.sign(mousePos[1] - vertexArray[1]) * Math.sign(dx);
 
+        vertexArray = [...vertexArray, mousePos[0], vertexArray[1], mousePos[0], vertexArray[1]+sign*dx, vertexArray[0], vertexArray[1]+sign*dx];
+        state.shapes.push(new Square(vertexArray, state.color, nextId));
+        nextId++;
         state.mode = "Selecting";
 
         vertexArray.length = 0;
         break;
       case "Rectangle":
-        vertexArray.push(position[0]);
-        vertexArray.push(position[1]);
-        state.shapes.push(new Rectangle(vertexArray, state.color));
-
+        // vertexArray.push(position[0]);
+        // vertexArray.push(position[1]);
+        vertexArray = [...vertexArray, vertexArray[0], position[1], position[0], position[1], position[0], vertexArray[1]];
+        state.shapes.push(new Rectangle(vertexArray, state.color, nextId));
+        nextId++;
         state.mode = "Selecting";
 
         vertexArray.length = 0;
