@@ -73,7 +73,6 @@ function main() {
   const level = 0;
   gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, targetTexture, level);
   
-  // make a depth buffer and the same size as the targetTexture
   gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depthBuffer);
 
   function render() {
@@ -81,30 +80,25 @@ function main() {
 
     setFramebufferAttachmentSizes(gl.canvas.width, gl.canvas.height);
 
-    // ------ Draw the objects to the texture --------
-
     gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     
     gl.enable(gl.DEPTH_TEST);
     
-    // Clear the canvas AND the depth buffer.
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     gl.uniform2f(resolutionSelectLoc, canvas.clientWidth, canvas.clientHeight);
     state.shapes.forEach(shape => shape.drawID(gl, selectProgram));
 
-    // ------ Figure out what pixel is under the mouse and read it
-
     const data = new Uint8Array(4);
     gl.readPixels(
-        mousePos[0],            // x
-        mousePos[1],            // y
-        1,                 // width
-        1,                 // height
-        gl.RGBA,           // format
-        gl.UNSIGNED_BYTE,  // type
-        data);             // typed array to hold result
+        mousePos[0],        
+        mousePos[1],        
+        1,                 
+        1,                 
+        gl.RGBA,           
+        gl.UNSIGNED_BYTE,  
+        data);             
 
     state.hoverId = data[0] + (data[1] << 8) + (data[2] << 16) + (data[3] << 24);
 
@@ -149,7 +143,7 @@ function main() {
           );
           gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
 
-          gl.drawArrays(state.currentShape === "Rectangle" ? gl.TRIANGLE_FAN : gl.LINE_LOOP, 0, 4);
+          gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
           break;
         case "Polygon":
           gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
@@ -299,7 +293,7 @@ function getMousePosition(gl, e, canvas) {
 function handleKey(e) {
   if (e.code === "Space" && state.mode === "Drawing" && state.currentShape === "Polygon") {
     if (vertexArray.length > 4) {
-      state.shapes.push(new Polygon(vertexArray, state.color, nextId));
+      state.shapes = [new Polygon(vertexArray, state.color, nextId), ...state.shapes];
       nextId++;
     }
     state.mode = "Selecting";
@@ -338,7 +332,7 @@ function handleClick(gl, e, canvas) {
         vertexArray.push(position[0]);
         vertexArray.push(position[1]);
 
-        state.shapes.push(new Line(vertexArray, state.color, nextId));
+        state.shapes = [new Line(vertexArray, state.color, nextId), ...state.shapes];
         nextId++;
         state.mode = "Selecting";
 
@@ -351,7 +345,7 @@ function handleClick(gl, e, canvas) {
         let sign = Math.sign(mousePos[1] - vertexArray[1]) * Math.sign(dx);
 
         vertexArray = [...vertexArray, mousePos[0], vertexArray[1], mousePos[0], vertexArray[1]+sign*dx, vertexArray[0], vertexArray[1]+sign*dx];
-        state.shapes.push(new Square(vertexArray, state.color, nextId));
+        state.shapes = [new Square(vertexArray, state.color, nextId), ...state.shapes];
         nextId++;
         state.mode = "Selecting";
 
@@ -361,7 +355,7 @@ function handleClick(gl, e, canvas) {
         // vertexArray.push(position[0]);
         // vertexArray.push(position[1]);
         vertexArray = [...vertexArray, vertexArray[0], position[1], position[0], position[1], position[0], vertexArray[1]];
-        state.shapes.push(new Rectangle(vertexArray, state.color, nextId));
+        state.shapes = [new Rectangle(vertexArray, state.color, nextId), ...state.shapes];
         nextId++;
         state.mode = "Selecting";
 
