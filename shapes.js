@@ -83,6 +83,11 @@ class Line extends Shape {
 
     gl.drawArrays(gl.LINES, 0, this.vertexArray.length / 2);
   }
+
+  movePoint(idx, x, y) {
+    this.vertexArray[idx] = x;
+    this.vertexArray[idx+1] = y;
+  }
 }
 
 class Square extends Shape {
