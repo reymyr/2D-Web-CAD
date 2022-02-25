@@ -35,8 +35,16 @@
         <div class="controls">
           <p>Ini nanti buat ngedit gambarnya</p>
           <p>Press space to end drawing polygon</p>
-          <p>Shape Color</p>
-          <input type="color" name="color-picker" id="color-picker">
+          <p class="action-title">File</p>
+          <div class="action">
+            <button id="load-button">Load</button>
+            <button id="save-button">Save</button>
+            <input type="file" id="file-input" style="display: none;" />
+          </div>
+          <p class="action-title">Color</p>
+          <div class="action">
+            <input type="color" name="color-picker" id="color-picker">
+          </div>
         </div>
       </div>
     </div>

@@ -259,6 +259,51 @@ function initEventListeners(gl, canvas) {
   });
 
   window.addEventListener("keydown", handleKey);
+
+  document.getElementById("save-button").addEventListener("click", () => {
+    download(state.shapes, "web-cad-canvas.json");
+  })
+
+  document.getElementById("load-button").addEventListener("click", () => {
+    const loadFile = (e) => {
+      const file = e.srcElement.files[0];
+      if (!file) {
+        return false;
+      }
+      const fileReader = new FileReader();
+      console.log(fileReader)
+      fileReader.onload = (e) => {
+        const jsonString = e.target.result;
+        const parsedJson  = JSON.parse(jsonString);
+        parsedJson.shapes.forEach((shape) => {
+          let newShape = null;
+          switch (shape.type) {
+            case "line":
+              newShape = new Line(shape.vertexArray, shape.color, shape.id);
+              break;
+            case "square":
+              newShape = new Square(shape.vertexArray, shape.color, shape.id);
+              break;
+            case "rectangle":
+              newShape = new Rectangle(shape.vertexArray, shape.color, shape.id);
+              break;
+            case "polygon":
+              newShape = new Polygon(shape.vertexArray, shape.color, shape.id);
+              break;
+            default:
+              return;
+          }
+          state.shapes.push(newShape);
+        })
+      };
+      fileReader.readAsText(file);
+    }
+
+    const inputFile = document.getElementById("file-input");
+    inputFile.onchange = loadFile;
+    inputFile.click();
+
+  });
 }
 
 function hexToRgb(hex) {
@@ -366,6 +411,22 @@ function handleClick(gl, e, canvas) {
         break;
     }
   }
+}
+
+function download(arrayData, filename) {
+  let dataObj = {
+    shapes: arrayData,
+  };
+  let jsonObj = JSON.stringify(dataObj, '', 2);
+  let file = new Blob([jsonObj], { type: "application/json" });
+  let a = document.createElement("a"),
+    url = URL.createObjectURL(file);
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
 }
 
 main();

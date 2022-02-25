@@ -50,13 +50,22 @@ class Shape {
 }
 
 class Line extends Shape {
+  constructor(vertexArray, color, id) {
+    super(vertexArray, color, id);
+    this.type = "line";
+  }
+
   draw(gl, program) {
     let positionLoc = gl.getAttribLocation(program, "a_position");
     let colorLoc = gl.getUniformLocation(program, "u_color");
 
     let vBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertexArray), gl.STATIC_DRAW );
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      new Float32Array(this.vertexArray),
+      gl.STATIC_DRAW
+    );
     gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
     gl.uniform4fv(colorLoc, this.color);
 
@@ -68,10 +77,10 @@ class Line extends Shape {
     let idLoc = gl.getUniformLocation(program, "u_id");
 
     const u_id = [
-      ((this.id >>  0) & 0xFF) / 0xFF,
-      ((this.id >>  8) & 0xFF) / 0xFF,
-      ((this.id >> 16) & 0xFF) / 0xFF,
-      ((this.id >> 24) & 0xFF) / 0xFF,
+      ((this.id >> 0) & 0xff) / 0xff,
+      ((this.id >> 8) & 0xff) / 0xff,
+      ((this.id >> 16) & 0xff) / 0xff,
+      ((this.id >> 24) & 0xff) / 0xff,
     ];
     
     let dX = this.vertexArray[2] - this.vertexArray[0];
@@ -89,7 +98,11 @@ class Line extends Shape {
 
     let vBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(idRect), gl.STATIC_DRAW );
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      new Float32Array(this.vertexArray),
+      gl.STATIC_DRAW
+    );
     gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
 
     gl.uniform4fv(idLoc, u_id);
@@ -99,11 +112,16 @@ class Line extends Shape {
 
   movePoint(idx, x, y) {
     this.vertexArray[idx] = x;
-    this.vertexArray[idx+1] = y;
+    this.vertexArray[idx + 1] = y;
   }
 }
 
 class Square extends Shape {
+  constructor(vertexArray, color, id) {
+    super(vertexArray, color, id);
+    this.type = "square";
+  }
+
   draw(gl, program) {
     let positionLoc = gl.getAttribLocation(program, "a_position");
     let colorLoc = gl.getUniformLocation(program, "u_color");
@@ -152,13 +170,22 @@ class Square extends Shape {
 }
 
 class Rectangle extends Shape {
+  constructor(vertexArray, color, id) {
+    super(vertexArray, color, id);
+    this.type = "rectangle";
+  }
+
   draw(gl, program) {
     let positionLoc = gl.getAttribLocation(program, "a_position");
     let colorLoc = gl.getUniformLocation(program, "u_color");
 
     let vBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertexArray), gl.STATIC_DRAW);
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      new Float32Array(this.vertexArray),
+      gl.STATIC_DRAW
+    );
     gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
     gl.uniform4fv(colorLoc, this.color);
 
@@ -171,15 +198,19 @@ class Rectangle extends Shape {
     let idLoc = gl.getUniformLocation(program, "u_id");
 
     const u_id = [
-      ((this.id >>  0) & 0xFF) / 0xFF,
-      ((this.id >>  8) & 0xFF) / 0xFF,
-      ((this.id >> 16) & 0xFF) / 0xFF,
-      ((this.id >> 24) & 0xFF) / 0xFF,
+      ((this.id >> 0) & 0xff) / 0xff,
+      ((this.id >> 8) & 0xff) / 0xff,
+      ((this.id >> 16) & 0xff) / 0xff,
+      ((this.id >> 24) & 0xff) / 0xff,
     ];
 
     let vBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertexArray), gl.STATIC_DRAW);
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      new Float32Array(this.vertexArray),
+      gl.STATIC_DRAW
+    );
 
     gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
 
@@ -213,6 +244,11 @@ class Rectangle extends Shape {
 }
 
 class Polygon extends Shape {
+  constructor(vertexArray, color, id) {
+    super(vertexArray, color, id);
+    this.type = "polygon";
+  }
+
   draw(gl, program) {
     gl.useProgram(program);
     let positionLoc = gl.getAttribLocation(program, "a_position");
@@ -220,7 +256,11 @@ class Polygon extends Shape {
 
     let vBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertexArray), gl.STATIC_DRAW );
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      new Float32Array(this.vertexArray),
+      gl.STATIC_DRAW
+    );
     gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
 
     gl.uniform4fv(colorLoc, this.color);
@@ -234,17 +274,21 @@ class Polygon extends Shape {
     let idLoc = gl.getUniformLocation(program, "u_id");
 
     const u_id = [
-      ((this.id >>  0) & 0xFF) / 0xFF,
-      ((this.id >>  8) & 0xFF) / 0xFF,
-      ((this.id >> 16) & 0xFF) / 0xFF,
-      ((this.id >> 24) & 0xFF) / 0xFF,
+      ((this.id >> 0) & 0xff) / 0xff,
+      ((this.id >> 8) & 0xff) / 0xff,
+      ((this.id >> 16) & 0xff) / 0xff,
+      ((this.id >> 24) & 0xff) / 0xff,
     ];
 
     let vBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertexArray), gl.STATIC_DRAW);
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      new Float32Array(this.vertexArray),
+      gl.STATIC_DRAW
+    );
     gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
-    
+
     gl.uniform4fv(idLoc, u_id);
 
     gl.drawArrays(gl.TRIANGLE_FAN, 0, this.vertexArray.length / 2);
@@ -252,6 +296,6 @@ class Polygon extends Shape {
 
   movePoint(idx, x, y) {
     this.vertexArray[idx] = x;
-    this.vertexArray[idx+1] = y;
+    this.vertexArray[idx + 1] = y;
   }
 }
