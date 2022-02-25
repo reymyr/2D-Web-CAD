@@ -63,12 +63,9 @@ function main() {
     gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, width, height);
   }
   
-  // Create and bind the framebuffer
   const fb = gl.createFramebuffer();
   gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
-  // gl.bindFramebuffer(gl.FRAMEBUFFER, null);  
-  
-  // attach the texture as the first color attachment
+
   const attachmentPoint = gl.COLOR_ATTACHMENT0;
   const level = 0;
   gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, targetTexture, level);
@@ -284,7 +281,7 @@ function getMousePosition(gl, e, canvas) {
   const rect = canvas.getBoundingClientRect()
   const position = [
     e.clientX - rect.left,
-    gl.drawingBufferHeight - (e.clientY - rect.top)
+    (e.clientY - rect.top)
   ]
 
   return position;
@@ -339,8 +336,6 @@ function handleClick(gl, e, canvas) {
         vertexArray.length = 0;
         break;
       case "Square":
-        // vertexArray.push(position[0]);
-        // vertexArray.push(position[1]);
         let dx = mousePos[0] - vertexArray[0];
         let sign = Math.sign(mousePos[1] - vertexArray[1]) * Math.sign(dx);
 
@@ -352,9 +347,13 @@ function handleClick(gl, e, canvas) {
         vertexArray.length = 0;
         break;
       case "Rectangle":
-        // vertexArray.push(position[0]);
-        // vertexArray.push(position[1]);
-        vertexArray = [...vertexArray, vertexArray[0], position[1], position[0], position[1], position[0], vertexArray[1]];
+        let minX = Math.min(vertexArray[0], position[0]);
+        let minY = Math.min(vertexArray[1], position[1]);
+        let maxX = Math.max(vertexArray[0], position[0]);
+        let maxY = Math.max(vertexArray[1], position[1]);
+
+        vertexArray = [minX, minY, minX, maxY, maxX, maxY, maxX, minY]
+
         state.shapes = [new Rectangle(vertexArray, state.color, nextId), ...state.shapes];
         nextId++;
         state.mode = "Selecting";

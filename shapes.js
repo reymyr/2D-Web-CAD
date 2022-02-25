@@ -27,7 +27,7 @@ class Shape {
   }
 
   getSelectedPoint(x, y) {
-    let minDist = 9999999999;
+    let minDist = Infinity;
     let minIdx = -1;
     for (let i = 0; i < this.vertexArray.length; i += 2) {
       let curDist = Math.sqrt((this.vertexArray[i]-x)**2 + (this.vertexArray[i+1]-y)**2)
@@ -73,15 +73,28 @@ class Line extends Shape {
       ((this.id >> 16) & 0xFF) / 0xFF,
       ((this.id >> 24) & 0xFF) / 0xFF,
     ];
+    
+    let dX = this.vertexArray[2] - this.vertexArray[0];
+    let dY = this.vertexArray[3] - this.vertexArray[1];
+
+    let len = Math.sqrt(dX**2 + dY**2)
+    let rotated = [-dY * 4 / len, dX * 4 / len]
+
+    let idRect = [
+      this.vertexArray[0] - rotated[0], this.vertexArray[1] - rotated[1],
+      this.vertexArray[0] + rotated[0], this.vertexArray[1] + rotated[1],
+      this.vertexArray[2] - rotated[0], this.vertexArray[3] - rotated[1],
+      this.vertexArray[2] + rotated[0], this.vertexArray[3] + rotated[1],
+    ]
 
     let vBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertexArray), gl.STATIC_DRAW );
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(idRect), gl.STATIC_DRAW );
     gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
 
     gl.uniform4fv(idLoc, u_id);
 
-    gl.drawArrays(gl.LINES, 0, this.vertexArray.length / 2);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 
   movePoint(idx, x, y) {
@@ -143,11 +156,6 @@ class Rectangle extends Shape {
     let positionLoc = gl.getAttribLocation(program, "a_position");
     let colorLoc = gl.getUniformLocation(program, "u_color");
 
-    // let x1 = this.vertexArray[0];
-    // let y1 = this.vertexArray[1];
-    // let x2 = this.vertexArray[2];
-    // let y2 = this.vertexArray[3];
-
     let vBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertexArray), gl.STATIC_DRAW);
@@ -169,11 +177,6 @@ class Rectangle extends Shape {
       ((this.id >> 24) & 0xFF) / 0xFF,
     ];
 
-    let x1 = this.vertexArray[0];
-    let y1 = this.vertexArray[1];
-    let x2 = this.vertexArray[2];
-    let y2 = this.vertexArray[3];
-
     let vBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertexArray), gl.STATIC_DRAW);
@@ -183,6 +186,29 @@ class Rectangle extends Shape {
     gl.uniform4fv(idLoc, u_id);
 
     gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+  }
+
+  movePoint(idx, x, y) {
+    this.vertexArray[idx] = x;
+    this.vertexArray[idx+1] = y;
+    switch (idx) {
+      case 0:
+        this.vertexArray[2] = x;
+        this.vertexArray[7] = y;
+        break;
+      case 2:
+        this.vertexArray[0] = x;
+        this.vertexArray[5] = y;
+        break;
+      case 4:
+        this.vertexArray[3] = y;
+        this.vertexArray[6] = x;
+        break;
+      case 6:
+        this.vertexArray[4] = x;
+        this.vertexArray[1] = y;
+        break;
+    }
   }
 }
 
