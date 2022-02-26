@@ -270,8 +270,8 @@ function initEventListeners(gl, canvas) {
       if (!file) {
         return false;
       }
+      state.shapes = [];
       const fileReader = new FileReader();
-      console.log(fileReader)
       fileReader.onload = (e) => {
         const jsonString = e.target.result;
         const parsedJson  = JSON.parse(jsonString);
