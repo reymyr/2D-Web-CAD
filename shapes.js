@@ -100,7 +100,7 @@ class Line extends Shape {
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
     gl.bufferData(
       gl.ARRAY_BUFFER,
-      new Float32Array(this.vertexArray),
+      new Float32Array(idRect),
       gl.STATIC_DRAW
     );
     gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
