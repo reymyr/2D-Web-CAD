@@ -98,7 +98,6 @@ function main() {
         data);             
 
     state.hoverId = data[0] + (data[1] << 8) + (data[2] << 16) + (data[3] << 24);
-    console.log(state.hoverId)
 
     gl.useProgram(program);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
