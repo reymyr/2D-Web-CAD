@@ -167,6 +167,43 @@ class Square extends Shape {
 
     gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
   }
+
+  movePoint(idx, x, y) {
+    switch (idx) {
+      case 0:
+        let dx0 = x - this.vertexArray[4];
+        let sign0 = Math.sign(y - this.vertexArray[5]) * Math.sign(dx0);
+        this.vertexArray[idx] = x;
+        this.vertexArray[idx + 1] = this.vertexArray[5]+sign0*dx0;
+        this.vertexArray[6] = x;
+        this.vertexArray[3] = this.vertexArray[5]+sign0*dx0;
+        break;
+      case 2:
+        let dx2 = x - this.vertexArray[6];
+        let sign2 = Math.sign(y - this.vertexArray[7]) * Math.sign(dx2);
+        this.vertexArray[idx] = x;
+        this.vertexArray[idx + 1] = this.vertexArray[7]+sign2*dx2;
+        this.vertexArray[4] = x;
+        this.vertexArray[1] = this.vertexArray[7]+sign2*dx2;
+        break;
+      case 4:
+        let dx = x - this.vertexArray[0];
+        let sign = Math.sign(y - this.vertexArray[1]) * Math.sign(dx);
+        this.vertexArray[idx] = x;
+        this.vertexArray[idx + 1] = this.vertexArray[1]+sign*dx;
+        this.vertexArray[7] = this.vertexArray[1]+sign*dx;
+        this.vertexArray[2] = x;
+        break;
+      case 6:
+        let dx6 = x - this.vertexArray[2];
+        let sign6 = Math.sign(y - this.vertexArray[3]) * Math.sign(dx6);
+        this.vertexArray[idx] = x;
+        this.vertexArray[idx + 1] = this.vertexArray[3]+sign6*dx6;
+        this.vertexArray[5] = this.vertexArray[3]+sign6*dx6;
+        this.vertexArray[0] = x;
+        break;
+    }
+  }
 }
 
 class Rectangle extends Shape {
