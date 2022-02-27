@@ -4,6 +4,10 @@ body, html {
   background-color: beige;
 }
 
+span.a{ 
+  display: inline; /* the default for span */ 
+}
+
 .select-shapes {
   display: flex;
   flex-direction: row;
