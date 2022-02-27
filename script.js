@@ -98,6 +98,7 @@ function main() {
         data);             
 
     state.hoverId = data[0] + (data[1] << 8) + (data[2] << 16) + (data[3] << 24);
+    console.log(state.hoverId)
 
     gl.useProgram(program);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -275,7 +276,9 @@ function initEventListeners(gl, canvas) {
       fileReader.onload = (e) => {
         const jsonString = e.target.result;
         const parsedJson  = JSON.parse(jsonString);
+        let maxId = -1
         parsedJson.shapes.forEach((shape) => {
+          maxId = shape.id > maxId ? shape.id : maxId;
           let newShape = null;
           switch (shape.type) {
             case "line":
@@ -295,6 +298,7 @@ function initEventListeners(gl, canvas) {
           }
           state.shapes.push(newShape);
         })
+        nextId = maxId + 1;
       };
       fileReader.readAsText(file);
     }
