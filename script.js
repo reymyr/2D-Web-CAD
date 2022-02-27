@@ -368,7 +368,7 @@ function handleClick(gl, e, canvas) {
       
       if (state.selectedShape) {
         state.selectedShape.toggleSelect();
-        document.getElementById("color-picker").value = rgbToHex(state.color[0], state.color[1], state.color[2]);
+        document.getElementById("color-picker").value = rgbToHex(state.selectedShape.color[0], state.selectedShape.color[1], state.selectedShape.color[2]);
       }
     }
   } else if (state.mode === "Drawing") {
