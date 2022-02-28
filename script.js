@@ -26,7 +26,7 @@ function main() {
   let selectProgram = initShaders(gl, "pick-vertex-shader", "pick-fragment-shader");
   gl.useProgram(program);
 
-  initEventListeners(gl, canvas);
+  initEventListeners(canvas);
 
   let positionLoc = gl.getAttribLocation(program, "a_position");
   let colorLoc = gl.getUniformLocation(program, "u_color");
@@ -149,7 +149,6 @@ function main() {
 
           gl.drawArrays(gl.LINE_LOOP, 0, vertexArray.length / 2 + 1);
           break;
-          
       }
     }
 
@@ -213,7 +212,7 @@ function initShaders(gl, vertexShaderId, fragmentShaderId) {
   return program;
 }
 
-function initEventListeners(gl, canvas) {
+function initEventListeners(canvas) {
   document.getElementById("color-picker").addEventListener("input", (e) => {
     let rgb = hexToRgb(e.target.value);
     state.color = [...rgb, 1.0];
@@ -223,11 +222,11 @@ function initEventListeners(gl, canvas) {
   });
 
   canvas.addEventListener("click", (e) => {
-    handleClick(gl, e, canvas)
+    handleClick(e, canvas)
   });
 
   canvas.addEventListener("mousemove", (e) => {
-    mousePos = getMousePosition(gl, e, canvas);
+    mousePos = getMousePosition(e, canvas);
     if (state.currentShape === "Select") {
       if (state.selectedShape && state.isMoving) {
         state.selectedShape.movePoint(state.pointToMove, mousePos[0], mousePos[1]);
@@ -309,32 +308,6 @@ function initEventListeners(gl, canvas) {
   });
 }
 
-function hexToRgb(hex) {
-  let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result ? [
-    parseInt(result[1], 16) / 255,
-    parseInt(result[2], 16) / 255,
-    parseInt(result[3], 16) / 255
-  ] : null;
-}
-
-function rgbToHex(r, g, b) {
-  r *= 255;
-  g *= 255;
-  b *= 255;
-  return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-}
-
-function getMousePosition(gl, e, canvas) {
-  const rect = canvas.getBoundingClientRect()
-  const position = [
-    e.clientX - rect.left,
-    (e.clientY - rect.top)
-  ]
-
-  return position;
-}
-
 function handleKey(e) {
   if (e.code === "Space" && state.mode === "Drawing" && state.currentShape === "Polygon") {
     if (vertexArray.length > 4) {
@@ -346,8 +319,8 @@ function handleKey(e) {
   }
 }
 
-function handleClick(gl, e, canvas) {
-  const position = getMousePosition(gl, e, canvas);
+function handleClick(e, canvas) {
+  const position = getMousePosition(e, canvas);
 
   if (state.mode === "Selecting") {
     if (state.currentShape != "Select") {
@@ -430,6 +403,32 @@ function download(arrayData, filename) {
   a.click();
   document.body.removeChild(a);
   window.URL.revokeObjectURL(url);
+}
+
+function getMousePosition(e, canvas) {
+  const rect = canvas.getBoundingClientRect()
+  const position = [
+    e.clientX - rect.left,
+    (e.clientY - rect.top)
+  ]
+
+  return position;
+}
+
+function hexToRgb(hex) {
+  let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? [
+    parseInt(result[1], 16) / 255,
+    parseInt(result[2], 16) / 255,
+    parseInt(result[3], 16) / 255
+  ] : null;
+}
+
+function rgbToHex(r, g, b) {
+  r *= 255;
+  g *= 255;
+  b *= 255;
+  return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
 }
 
 main();

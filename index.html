@@ -33,17 +33,13 @@
           <canvas id="canvas"></canvas>
         </div>
         <div class="controls">
-          <!-- <p>Ini nanti buat ngedit gambarnya</p>
-          <p>Press space to end drawing polygon</p> -->
           <h2>Load File</h2>
-          <!-- <p class="action-title">File</p> -->
           <div class="action">
             <button id="load-button">Load</button>
             <button id="save-button">Save</button>
             <input type="file" id="file-input" style="display: none;" />
           </div>
           <h2>Choose Color</h2>
-          <!-- <p class="action-title">Color</p> -->
           <div class="action">
             <input type="color" name="color-picker" id="color-picker">
           </div>
@@ -61,7 +57,7 @@
                 Left click to start drawing and move the mouse to draw and left click again to stop drawing
               </li>
               <li style="list-style-type: None;">
-                <span class="a"><h5 style="display: inline;">SPACE</h5></span> - to end and draw poligon
+                <span class="a"><h5 style="display: inline;">SPACE</h5></span> - to end and draw polygon
               </li>
             </ul>
             <h4>To Resize The Shape: </h4>
@@ -117,7 +113,7 @@
         gl_FragColor = u_color; 
       }
     </script>
-    <!-- vertex shader -->
+
     <script id="pick-vertex-shader" type="x-shader/x-vertex">
       attribute vec2 a_position;
  
@@ -136,7 +132,7 @@
         gl_Position = vec4(clipSpace, 0, 1);
       }
     </script>
-    <!-- fragment shader -->
+
     <script id="pick-fragment-shader" type="x-shader/x-fragment">
       precision mediump float;
     
